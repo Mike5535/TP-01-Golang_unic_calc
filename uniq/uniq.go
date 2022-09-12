@@ -149,7 +149,7 @@ func cutSymbols(inputStr string, numChars int) string {
 		buf = buf[:len(buf)-1]
 	}
 	if numChars >= cap(buf) {
-		return " "
+		return ""
 	}
 	buf = buf[numChars:]
 	return strings.Join(buf, "")
