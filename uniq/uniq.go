@@ -139,11 +139,17 @@ func Uniqle(param Options, input list.List) {
 
 //убирает символы из строки
 func cutSymbols(inputStr string, numChars int) string {
+	if inputStr == "" {
+		return inputStr
+	}
 	buf := strings.Split(inputStr, "")
 	if buf[0] == " " {
 		copy(buf[:], buf[1:])
 		buf[len(buf)-1] = ""
 		buf = buf[:len(buf)-1]
+	}
+	if numChars >= cap(buf) {
+		return " "
 	}
 	buf = buf[numChars:]
 	return strings.Join(buf, "")
