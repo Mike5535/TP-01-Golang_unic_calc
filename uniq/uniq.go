@@ -24,7 +24,12 @@ type Options struct {
 	FieldOptions *OptFields
 }
 
-func UniqleRead() {
+type Pair struct {
+	str  string
+	numb uint
+}
+
+func UniqleRead() (*Options, *list.List) {
 	opt := new(Options)
 	opt.FieldOptions = new(OptFields)
 
@@ -58,21 +63,58 @@ func UniqleRead() {
 		orderList.PushBack(buf.Text())
 	}
 
-	Uniqle(*opt, *orderList)
-
 	if err := buf.Err(); err != nil {
 		fmt.Fprintln(os.Stderr, "error reading: err:", err)
 	}
+	return opt, orderList
+}
+
+//убирает символы из строки
+func CutSymbols(inputStr string, numChars int) string {
+	if inputStr == "" {
+		return inputStr
+	}
+	buf := strings.Split(inputStr, "")
+	if buf[0] == " " {
+		copy(buf[:], buf[1:])
+		buf[len(buf)-1] = ""
+		buf = buf[:len(buf)-1]
+	}
+	if numChars >= cap(buf) {
+		return ""
+	}
+	buf = buf[numChars:]
+	return strings.Join(buf, "")
+}
+
+//убирает поля из строки
+func CutString(inputStr string, param OptFields) string {
+	if inputStr == "" {
+		return ""
+	}
+
+	if param.AnyRegister {
+		inputStr = strings.ToLower(inputStr)
+	}
+
+	if param.NumFields != 0 {
+		s := strings.Split(inputStr, " ")[param.NumFields:]
+		temp := strings.Join(s, " ")
+		if param.NumChars != 0 {
+			temp = CutSymbols(temp, param.NumChars)
+		}
+		return temp
+	}
+
+	if param.NumChars != 0 {
+		return CutSymbols(inputStr, param.NumChars)
+	}
+
+	return inputStr
 }
 
 //функция уникализации строк
-func Uniqle(param Options, input list.List) {
-
-	type Pair struct {
-		str  string
-		numb uint
-	}
-
+func Uniqle(param Options, input list.List) *list.List {
 	listPair := new(list.List)
 	iterPair := listPair.Front()
 
@@ -83,7 +125,7 @@ func Uniqle(param Options, input list.List) {
 			iterPair = listPair.Back()
 		}
 
-		if curr := iterPair.Value.(Pair); cutString(curr.str, *param.FieldOptions) == cutString(iterInput.Value.(string), *param.FieldOptions) {
+		if curr := iterPair.Value.(Pair); CutString(curr.str, *param.FieldOptions) == CutString(iterInput.Value.(string), *param.FieldOptions) {
 			curr.numb++
 			iterPair.Value = curr
 		} else {
@@ -92,6 +134,13 @@ func Uniqle(param Options, input list.List) {
 		}
 
 	}
+
+	return listPair
+}
+
+func UniqWrite() {
+	param, inputList := UniqleRead()
+	listPair := Uniqle(*param, *inputList)
 
 	outName := flag.Arg(1)
 	var outFile *os.File
@@ -135,48 +184,4 @@ func Uniqle(param Options, input list.List) {
 	if (outName != "") {
 		outFile.Close()
 	}
-}
-
-//убирает символы из строки
-func cutSymbols(inputStr string, numChars int) string {
-	if inputStr == "" {
-		return inputStr
-	}
-	buf := strings.Split(inputStr, "")
-	if buf[0] == " " {
-		copy(buf[:], buf[1:])
-		buf[len(buf)-1] = ""
-		buf = buf[:len(buf)-1]
-	}
-	if numChars >= cap(buf) {
-		return ""
-	}
-	buf = buf[numChars:]
-	return strings.Join(buf, "")
-}
-
-//убирает поля из строки
-func cutString(inputStr string, param OptFields) string {
-	if inputStr == "" {
-		return ""
-	}
-
-	if param.AnyRegister {
-		inputStr = strings.ToLower(inputStr)
-	}
-
-	if param.NumFields != 0 {
-		s := strings.Split(inputStr, " ")[param.NumFields:]
-		temp := strings.Join(s, "")
-		if param.NumChars != 0 {
-			temp = cutSymbols(temp, param.NumChars)
-		}
-		return temp
-	}
-
-	if param.NumChars != 0 {
-		return cutSymbols(inputStr, param.NumChars)
-	}
-
-	return inputStr
 }

@@ -5,5 +5,5 @@ import (
 )
 
 func main() {
-	uniq.UniqleRead()
+	uniq.UniqWrite()
 }
