@@ -1,135 +1,33 @@
 package uniq
 
 import (
-	"bufio"
 	"container/list"
 	"flag"
 	"fmt"
-	"io"
 	"os"
 	"strconv"
-	"strings"
+	"github.com/mike5535/uniq/uniq_types"
+	"github.com/mike5535/uniq/cut_string"
+	"github.com/mike5535/uniq/uniq_read"
 )
 
-type OptFields struct {
-	AnyRegister bool
-	NumFields   int
-	NumChars    int
-}
-
-type Options struct {
-	Counting     bool
-	Repeat       bool
-	Uniq         bool
-	FieldOptions *OptFields
-}
-
-type Pair struct {
-	str  string
-	numb uint
-}
-
-func UniqleRead() (*Options, *list.List) {
-	opt := new(Options)
-	opt.FieldOptions = new(OptFields)
-
-	flag.BoolVar(&opt.Counting, "c", false, "strings with number of repeat")
-	flag.BoolVar(&opt.Repeat, "d", false, "repeating strings")
-	flag.BoolVar(&opt.Uniq, "u", false, "uniq strings")
-	flag.BoolVar(&opt.FieldOptions.AnyRegister, "i", false, "ignore register")
-	flag.IntVar(&opt.FieldOptions.NumFields, "f", 0, "number of fields to ignore")
-	flag.IntVar(&opt.FieldOptions.NumChars, "s", 0, "number of chars to ignore")
-	flag.Parse()
-
-	var in io.Reader
-	if filename := flag.Arg(0); filename != "" {
-		f, err := os.Open(filename)
-		if err != nil {
-			fmt.Println("error opening file: err:", err)
-			os.Exit(1)
-		}
-		defer f.Close()
-
-		in = f
-	} else {
-		in = os.Stdin
-	}
-
-	buf := bufio.NewScanner(in)
-
-	orderList := list.New()
-
-	for buf.Scan() {
-		orderList.PushBack(buf.Text())
-	}
-
-	if err := buf.Err(); err != nil {
-		fmt.Fprintln(os.Stderr, "error reading: err:", err)
-	}
-	return opt, orderList
-}
-
-//убирает символы из строки
-func CutSymbols(inputStr string, numChars int) string {
-	if inputStr == "" {
-		return inputStr
-	}
-	buf := strings.Split(inputStr, "")
-	if buf[0] == " " {
-		copy(buf[:], buf[1:])
-		buf[len(buf)-1] = ""
-		buf = buf[:len(buf)-1]
-	}
-	if numChars >= cap(buf) {
-		return ""
-	}
-	buf = buf[numChars:]
-	return strings.Join(buf, "")
-}
-
-//убирает поля из строки
-func CutString(inputStr string, param OptFields) string {
-	if inputStr == "" {
-		return ""
-	}
-
-	if param.AnyRegister {
-		inputStr = strings.ToLower(inputStr)
-	}
-
-	if param.NumFields != 0 {
-		s := strings.Split(inputStr, " ")[param.NumFields:]
-		temp := strings.Join(s, " ")
-		if param.NumChars != 0 {
-			temp = CutSymbols(temp, param.NumChars)
-		}
-		return temp
-	}
-
-	if param.NumChars != 0 {
-		return CutSymbols(inputStr, param.NumChars)
-	}
-
-	return inputStr
-}
-
 //функция уникализации строк
-func Uniqle(param Options, input list.List) *list.List {
+func Uniqle(param uniq_types.Options, input list.List) *list.List {
 	listPair := new(list.List)
 	iterPair := listPair.Front()
 
 	for iterInput := input.Front(); iterInput != nil; iterInput = iterInput.Next() {
 
 		if iterPair == nil {
-			listPair.PushBack(Pair{iterInput.Value.(string), 0})
+			listPair.PushBack(uniq_types.Pair{iterInput.Value.(string), 0})
 			iterPair = listPair.Back()
 		}
 
-		if curr := iterPair.Value.(Pair); CutString(curr.str, *param.FieldOptions) == CutString(iterInput.Value.(string), *param.FieldOptions) {
-			curr.numb++
+		if curr := iterPair.Value.(uniq_types.Pair); cut_string.CutString(curr.Str, *param.FieldOptions) == cut_string.CutString(iterInput.Value.(string), *param.FieldOptions) {
+			curr.Numb++
 			iterPair.Value = curr
 		} else {
-			listPair.PushBack(Pair{iterInput.Value.(string), 1})
+			listPair.PushBack(uniq_types.Pair{iterInput.Value.(string), 1})
 			iterPair = iterPair.Next()
 		}
 
@@ -139,7 +37,7 @@ func Uniqle(param Options, input list.List) *list.List {
 }
 
 func UniqWrite() {
-	param, inputList := UniqleRead()
+	param, inputList := uniq_read.UniqleRead()
 	listPair := Uniqle(*param, *inputList)
 
 	outName := flag.Arg(1)
@@ -163,17 +61,17 @@ func UniqWrite() {
 
 	helpFuncCount := func(e list.Element, flagCounting bool) {
 		if (flagCounting) {
-			helpFuncWrite(strconv.Itoa(int(e.Value.(Pair).numb)) + " " + e.Value.(Pair).str)
+			helpFuncWrite(strconv.Itoa(int(e.Value.(uniq_types.Pair).Numb)) + " " + e.Value.(uniq_types.Pair).Str)
 		} else {
-			helpFuncWrite(e.Value.(Pair).str)
+			helpFuncWrite(e.Value.(uniq_types.Pair).Str)
 		}
 	}
 
 	for e := listPair.Front(); e != nil; e = e.Next() {
-		if param.Repeat && e.Value.(Pair).numb > 1 {
+		if param.Repeat && e.Value.(uniq_types.Pair).Numb > 1 {
 			helpFuncCount(*e, param.Counting)
 		}
-		if param.Uniq && e.Value.(Pair).numb == 1 {
+		if param.Uniq && e.Value.(uniq_types.Pair).Numb == 1 {
 			helpFuncCount(*e, param.Counting)
 		}
 		if !param.Uniq && !param.Repeat {
