@@ -1,9 +1,12 @@
 package main
 
 import (
-	"github.com/mike5535/uniq"
+	"os"
+	"fmt"
+	"github.com/mike5535/calc"
 )
 
 func main() {
-	uniq.UniqWrite()
+	simpExpr := calc.ParseSimpleExpr(calc.ParseExpr(os.Args[1]))
+	fmt.Println(calc.CalcSimpleExpr(simpExpr))
 }
