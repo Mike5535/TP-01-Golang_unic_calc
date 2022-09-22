@@ -6,20 +6,33 @@ import (
 )
 
 func CalcTwoNum(num1 int, num2 int, operation string) int {
-	res := 0
-	if operation == "*" {
-		res = num1 * num2
+	switch operation {
+	case "*":
+		return num1 * num2
+	case "/":
+		return num1 / num2
+	case "-":
+		return num1 - num2
+	case "+":
+		return num1 + num2
 	}
-	if operation == "/" {
-		res = num1 / num2
+	return 0
+}
+
+//возвращает полное число из отдельных цифр
+func MakeArgument(pos int, charsIn []string) (string, int) {
+	result := charsIn[pos]
+	pos++
+
+	for _, err := strconv.Atoi(charsIn[pos]); err == nil && pos < len(charsIn); {
+		result += charsIn[pos]
+		pos++
+		if pos < len(charsIn) {
+			_, err = strconv.Atoi(charsIn[pos])
+		}
 	}
-	if operation == "-" {
-		res = num1 - num2
-	}
-	if operation == "+" {
-		res = num1 + num2
-	}
-	return res
+
+	return result, pos
 }
 
 //делает из строки набор аргументов и операций
@@ -30,21 +43,6 @@ func ParseSimpleExpr(input string) []string {
 	}
 	chars := []string{}
 
-	helpFunc := func(pos int) (string, int) {
-		result := charsIn[pos]
-		pos++
-
-		for _, err := strconv.Atoi(charsIn[pos]); err == nil && pos < len(charsIn); {
-			result += charsIn[pos]
-			pos++
-			if pos < len(charsIn) {
-				_, err = strconv.Atoi(charsIn[pos])
-			}
-		}
-
-		return result, pos
-	}
-
 	tempChar := ""
 	for i := 0; i < len(charsIn); {
 		tempChar = ""
@@ -53,7 +51,7 @@ func ParseSimpleExpr(input string) []string {
 			_, err1 := strconv.Atoi(charsIn[i+1])
 			_, err2 := strconv.Atoi(charsIn[i])
 			if err1 == nil && err2 == nil {
-				tempChar, i = helpFunc(i)
+				tempChar, i = MakeArgument(i, charsIn)
 			}
 		}
 
@@ -64,7 +62,7 @@ func ParseSimpleExpr(input string) []string {
 			_, err2 := strconv.Atoi(charsIn[i])
 			if err1 == nil && err2 == nil {
 				bufChar := ""
-				bufChar, i = helpFunc(i)
+				bufChar, i = MakeArgument(i, charsIn)
 				tempChar += bufChar
 			}
 		}
@@ -83,11 +81,9 @@ func ParseSimpleExpr(input string) []string {
 //вычисляет выражение без скобок
 func CalcSimpleExpr(chars []string) int {
 	result := 0
-	temp1 := 0
+	temp1, _ := strconv.Atoi(chars[0])
 	temp2 := 0
 	operation := ""
-
-	temp1, _ = strconv.Atoi(chars[0])
 
 	for i := 0; i < len(chars)-1; {
 		if i != 0 {
