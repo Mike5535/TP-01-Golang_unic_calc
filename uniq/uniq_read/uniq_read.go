@@ -3,14 +3,13 @@ package uniq_read
 import (
 	"fmt"
 	"bufio"
-	"container/list"
 	"flag"
 	"io"
 	"os"
 	"github.com/mike5535/uniq/uniq_types"
 )
 
-func UniqleRead() (*uniq_types.Options, *list.List) {
+func ParseFlags() (*uniq_types.Options) {
 	opt := new(uniq_types.Options)
 	opt.FieldOptions = new(uniq_types.OptFields)
 
@@ -22,6 +21,10 @@ func UniqleRead() (*uniq_types.Options, *list.List) {
 	flag.IntVar(&opt.FieldOptions.NumChars, "s", 0, "number of chars to ignore")
 	flag.Parse()
 
+	return opt
+}
+
+func UniqleRead() ([]string) {
 	var in io.Reader
 	if filename := flag.Arg(0); filename != "" {
 		f, err := os.Open(filename)
@@ -38,14 +41,14 @@ func UniqleRead() (*uniq_types.Options, *list.List) {
 
 	buf := bufio.NewScanner(in)
 
-	orderList := list.New()
+	input := []string{}
 
 	for buf.Scan() {
-		orderList.PushBack(buf.Text())
+		input = append(input, buf.Text())
 	}
 
 	if err := buf.Err(); err != nil {
 		fmt.Fprintln(os.Stderr, "error reading: err:", err)
 	}
-	return opt, orderList
+	return input
 }

@@ -4,7 +4,6 @@ go 1.18
 
 require (
 	github.com/mike5535/uniq/cut_string v0.0.0
-	github.com/mike5535/uniq/uniq_read v0.0.0
 	github.com/mike5535/uniq/uniq_types v0.0.0
 	github.com/stretchr/testify v1.8.0
 )

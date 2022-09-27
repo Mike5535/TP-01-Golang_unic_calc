@@ -8,19 +8,20 @@ import (
 )
 
 // проверка подсчёта
+
 func TestUniqleCounting(t *testing.T){
     
     testParam := uniq_types.Options{true,false,false,&uniq_types.OptFields{false,0,0}}
-    var input list.List
+    input := []string{}
     for i := 0; i < 3; i++ {
-    input.PushBack("I love music.")
+    input = append(input, "I love music.")
     }
-    input.PushBack(" ")
+    input = append(input, " ")
     for i := 0; i < 2; i++ {
-        input.PushBack("I love music of Kartik.")
+        input = append(input, "I love music of Kartik.")
     }
 
-    got := Uniqle(testParam, input)
+    got := Uniqle(&testParam, input)
 
     var want list.List
     want.PushBack(uniq_types.Pair{"I love music.",3})

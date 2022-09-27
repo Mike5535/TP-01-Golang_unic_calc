@@ -8,26 +8,25 @@ import (
 	"strconv"
 	"github.com/mike5535/uniq/uniq_types"
 	"github.com/mike5535/uniq/cut_string"
-	"github.com/mike5535/uniq/uniq_read"
 )
 
 //функция уникализации строк
-func Uniqle(param uniq_types.Options, input list.List) *list.List {
+func Uniqle(param *uniq_types.Options, input []string) *list.List {
 	listPair := new(list.List)
 	iterPair := listPair.Front()
 
-	for iterInput := input.Front(); iterInput != nil; iterInput = iterInput.Next() {
+	for _,iterInput := range input {
 
 		if iterPair == nil {
-			listPair.PushBack(uniq_types.Pair{iterInput.Value.(string), 0})
+			listPair.PushBack(uniq_types.Pair{iterInput, 0})
 			iterPair = listPair.Back()
 		}
 
-		if curr := iterPair.Value.(uniq_types.Pair); cut_string.CutString(curr.Str, *param.FieldOptions) == cut_string.CutString(iterInput.Value.(string), *param.FieldOptions) {
+		if curr := iterPair.Value.(uniq_types.Pair); cut_string.CutString(curr.Str, *param.FieldOptions) == cut_string.CutString(iterInput, *param.FieldOptions) {
 			curr.Numb++
 			iterPair.Value = curr
 		} else {
-			listPair.PushBack(uniq_types.Pair{iterInput.Value.(string), 1})
+			listPair.PushBack(uniq_types.Pair{iterInput, 1})
 			iterPair = iterPair.Next()
 		}
 
@@ -36,10 +35,7 @@ func Uniqle(param uniq_types.Options, input list.List) *list.List {
 	return listPair
 }
 
-func UniqWrite() {
-	param, inputList := uniq_read.UniqleRead()
-	listPair := Uniqle(*param, *inputList)
-
+func UniqWrite(param *uniq_types.Options,listPair *list.List) {
 	outName := flag.Arg(1)
 	var outFile *os.File
 	if (outName != "") {
